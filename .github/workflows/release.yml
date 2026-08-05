@@ -66,6 +66,8 @@ jobs:
     name: Publish release
     runs-on: ubuntu-latest
     needs: build-vsix
+    env:
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -101,13 +103,15 @@ jobs:
         run: npm ci
 
       - name: Verify Open VSX publish access
+        if: ${{ env.OVSX_PAT != '' }}
         working-directory: extension
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: |
           set -euo pipefail
-          : "${OVSX_PAT:?OVSX_PAT secret is not configured}"
           ./node_modules/.bin/ovsx verify-pat Splunk
+
+      - name: Note skipped Open VSX publish
+        if: ${{ env.OVSX_PAT == '' }}
+        run: echo "::notice title=Open VSX publish skipped::OVSX_PAT secret is not configured; GitHub release assets will still be published."
 
       - name: Prepare release assets
         timeout-minutes: 10
@@ -126,9 +130,8 @@ jobs:
         run: gh release upload "${GITHUB_REF_NAME}" extension/*.vsix --clobber
 
       - name: Publish VSIX to Open VSX
+        if: ${{ env.OVSX_PAT != '' }}
         working-directory: extension
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: |
           set -euo pipefail
           failures=0
@@ -154,7 +157,11 @@ jobs:
           {
             echo "## Manual Visual Studio Marketplace publish required"
             echo
-            echo "GitHub Release and Open VSX publishing completed successfully."
+            if [ -n "${OVSX_PAT}" ]; then
+              echo "GitHub Release and Open VSX publishing completed successfully."
+            else
+              echo "GitHub Release completed successfully. Open VSX publishing was skipped because OVSX_PAT is not configured."
+            fi
             echo
             echo "Download the four platform-specific VSIX files from [${GITHUB_REF_NAME}](${RELEASE_URL}) and upload those exact files to the [Splunk publisher](${MARKETPLACE_PUBLISHER_URL}). Do not rebuild them."
             echo
