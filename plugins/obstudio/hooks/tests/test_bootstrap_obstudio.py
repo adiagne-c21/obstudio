@@ -107,9 +107,10 @@ class ResolveReleaseVersionTest(unittest.TestCase):
             BOOTSTRAP.urllib.request,
             "urlopen",
             return_value=FakeResponse(payload),
-        ):
+        ) as urlopen:
             got = BOOTSTRAP.resolve_latest_release_version()
         self.assertEqual(got, "0.0.14")
+        urlopen.assert_called_once_with(BOOTSTRAP.LATEST_RELEASE_API_URL, timeout=BOOTSTRAP.DOWNLOAD_TIMEOUT_SECONDS)
 
 
 class ParseChecksumTest(unittest.TestCase):
