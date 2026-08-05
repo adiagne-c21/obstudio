@@ -21,9 +21,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+RELEASE_REPOSITORY = os.environ.get("OBSTUDIO_RELEASE_REPOSITORY", "adiagne-c21/obstudio")
 RELEASE_BASE_URL = os.environ.get(
     "OBSTUDIO_RELEASE_BASE_URL",
-    "https://github.com/signalfx/obstudio/releases/latest/download",
+    f"https://github.com/{RELEASE_REPOSITORY}/releases/latest/download",
+)
+LATEST_RELEASE_API_URL = os.environ.get(
+    "OBSTUDIO_LATEST_RELEASE_API_URL",
+    f"https://api.github.com/repos/{RELEASE_REPOSITORY}/releases/latest",
 )
 OBSTUDIO_HEALTH_URL = os.environ.get(
     "OBSTUDIO_HEALTH_URL",
@@ -581,14 +586,13 @@ def resolve_release_artifact() -> str:
     raise RuntimeError(
         f"unsupported platform: {system}/{machine}. "
         "Obstudio releases currently ship Linux amd64, macOS arm64/amd64, and Windows amd64 assets; "
-        "install Obstudio manually from https://github.com/signalfx/obstudio/releases if your platform is not listed."
+        f"install Obstudio manually from https://github.com/{RELEASE_REPOSITORY}/releases if your platform is not listed."
     )
 
 
 def resolve_latest_release_version() -> str:
-    download_url = "https://api.github.com/repos/signalfx/obstudio/releases/latest"
     try:
-        with urllib.request.urlopen(download_url, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response:
+        with urllib.request.urlopen(LATEST_RELEASE_API_URL, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response:
             payload = json.load(response)
     except Exception as exc:  # pragma: no cover - network boundary
         raise RuntimeError("failed to determine latest Obstudio release version") from exc
