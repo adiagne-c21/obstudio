@@ -22,10 +22,7 @@ from pathlib import Path
 
 
 RELEASE_REPOSITORY = os.environ.get("OBSTUDIO_RELEASE_REPOSITORY", "adiagne-c21/obstudio")
-RELEASE_BASE_URL = os.environ.get(
-    "OBSTUDIO_RELEASE_BASE_URL",
-    f"https://github.com/{RELEASE_REPOSITORY}/releases/latest/download",
-)
+RELEASE_BASE_URL = f"https://github.com/{RELEASE_REPOSITORY}/releases/latest/download"
 LATEST_RELEASE_API_URL = os.environ.get(
     "OBSTUDIO_LATEST_RELEASE_API_URL",
     f"https://api.github.com/repos/{RELEASE_REPOSITORY}/releases/latest",
